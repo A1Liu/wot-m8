@@ -1,14 +1,43 @@
+let instance = null;
+
+const objectBuffer = [];
+
+const stringObjExt = (location, size) => {
+  const buffer = new Uint8Array(instance.exports.memory.buffer, location, size);
+
+  const decoder = new TextDecoder();
+  const string = decoder.decode(buffer);
+
+  const length = objectBuffer.length;
+  objectBuffer.push(string);
+
+  // console.log(string);
+  return length;
+};
+
+const submitObj = (value) => {
+  console.log(objectBuffer[value]);
+};
+
+const clearObjBuffer = () => {
+  objectBuffer.length = 0;
+};
+
 const imports = {
-  imports: {},
+  env: {
+    stringObjExt,
+    submitObj,
+    clearObjBuffer,
+  },
 };
 
 fetch("binary.wasm")
-  .then((response) => response.arrayBuffer())
-  .then((bytes) => WebAssembly.instantiate(bytes, imports))
-  .then((results) => {
-    instance = results.instance;
+  .then((resp) => WebAssembly.instantiateStreaming(resp, imports))
+  .then((result) => {
+    instance = result.instance;
+
     // grab our exported function from wasm
-    const add = results.instance.exports.add;
+    const add = instance.exports.add;
     console.log(add(3, 4));
   });
 
