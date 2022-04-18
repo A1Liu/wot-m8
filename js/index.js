@@ -1,33 +1,40 @@
 let instance = null;
 
+const sendString = () => {
+  const encoder = new TextEncoder();
+  const encodedString = encoder.encode(str);
+
+  const i8 = new Uint8Array(exports.mem);
+
+  // Copy the UTF-8 encoded string into the WASM memory.
+  i8.set(encodedString);
+};
+
 const objectBuffer = [];
-
-const stringObjExt = (location, size) => {
-  const buffer = new Uint8Array(instance.exports.memory.buffer, location, size);
-
-  const decoder = new TextDecoder();
-  const string = decoder.decode(buffer);
-
-  const length = objectBuffer.length;
-  objectBuffer.push(string);
-
-  // console.log(string);
-  return length;
-};
-
-const submitObj = (value) => {
-  console.log(objectBuffer[value]);
-};
-
-const clearObjBuffer = () => {
-  objectBuffer.length = 0;
-};
 
 const imports = {
   env: {
-    stringObjExt,
-    submitObj,
-    clearObjBuffer,
+    stringObjExt: (location, size) => {
+      const buffer = new Uint8Array(
+        instance.exports.memory.buffer,
+        location,
+        size
+      );
+
+      const decoder = new TextDecoder();
+      const string = decoder.decode(buffer);
+
+      const length = objectBuffer.length;
+      objectBuffer.push(string);
+
+      return length;
+    },
+    logObj: (value) => {
+      console.log(objectBuffer[value]);
+    },
+    clearObjBuffer: () => {
+      objectBuffer.length = 0;
+    },
   },
 };
 
