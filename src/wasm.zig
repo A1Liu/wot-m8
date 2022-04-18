@@ -2,6 +2,7 @@ const std = @import("std");
 const liu = @import("liu");
 
 pub const Obj = u32;
+const ArrayList = std.ArrayList;
 
 extern fn stringObjExt(message: [*]const u8, length: usize) Obj;
 
@@ -13,23 +14,74 @@ pub fn stringObj(bytes: []const u8) Obj {
     return stringObjExt(bytes.ptr, bytes.len);
 }
 
-const Message = struct {};
+const Message = struct {
+    const Self = @This();
 
-const MessageBus = struct {
-    var message_block: [8]Message = undefined;
-    var messages: []Message = message_block[0..0];
+    final_mark: liu.Mark,
 
-    var alloc_block: [4][]u8 = [_][]u8{&.{}} ** 4;
-    var next: liu.Mark = liu.Mark.ZERO;
-    var last: liu.Mark = liu.Mark.ZERO;
+    fn deinit(self: *const Self) void {
+        if (Bus.last_alloc.range + 1 < self.final_mark.range) {
+            var range = Bus.last_alloc.range;
+            const end = self.final_mark.range;
+
+            while (range < end) : (range += 1) {
+                const slot = range % Bus.alloc_block.len;
+                liu.Alloc.free(Bus.alloc_block[slot]);
+                Bus.alloc_block[slot] = &.{};
+            }
+        }
+
+        Bus.last_alloc = self.final_mark;
+
+        // pseudo-reset the range id's if possible
+        if (Bus.last_alloc.range == Bus.next_alloc.range) {
+            Bus.last_alloc.range = Bus.last_alloc.range % Bus.alloc_block.len;
+            Bus.next_alloc.range = Bus.next_alloc.range % Bus.alloc_block.len;
+        }
+    }
 };
 
-export fn sendMessage() void {
-    const block_id = MessageBus.next.range % MessageBus.alloc_block.len;
-    _ = block_id;
-}
+const Bus = struct {
+    var message_block: [8]Message = undefined;
+    var next_message: usize = 0;
+    var last_message: usize = 0;
 
-const ArrayList = std.ArrayList;
+    var alloc_block: [4][]u8 = [_][]u8{&.{}} ** 4;
+    var next_alloc: liu.Mark = liu.Mark.ZERO;
+    var last_alloc: liu.Mark = liu.Mark.ZERO;
+
+    fn sendMessage() callconv(.C) void {
+        if (next_message - last_message == message_block.len) {
+            // bus is full
+            return;
+        }
+
+        const message_slot = next_message % message_block.len;
+
+        message_block[message_slot] = Message{
+            .final_mark = Bus.next_alloc,
+        };
+
+        next_message += 1;
+    }
+
+    fn readMessage() ?Message {
+        if (last_message == next_message) {
+            next_message = 0;
+            last_message = 0;
+            return null;
+        }
+
+        const message = message_block[Bus.last_message];
+        last_message += 1;
+
+        return message;
+    }
+};
+
+export fn sendData() void {
+    Bus.sendMessage();
+}
 
 export fn add(a: i32, b: i32) i32 {
     const log = "happy happy joy joy";
@@ -37,7 +89,11 @@ export fn add(a: i32, b: i32) i32 {
 
     const value = stringObj(log);
 
-    MessageBus.messages.len += 1;
+    if (Bus.readMessage()) |message| {
+        defer message.deinit();
+
+        _ = message;
+    }
 
     var _temp = liu.LoopAlloc.init(1024, liu.Alloc);
     const temp = _temp.allocator();
