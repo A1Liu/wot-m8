@@ -89,6 +89,8 @@ export fn sendData() void {
 
     _ = Bus.messages.pushMany(&.{});
     _ = Bus.messages.popMany(&.{});
+    _ = Bus.messages.pop();
+    _ = Bus.messages.push(.{ .final_mark = liu.Mark.ZERO });
 
     Bus.sendMessage();
 }
