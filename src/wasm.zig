@@ -14,6 +14,8 @@ pub fn stringObj(bytes: []const u8) Obj {
     return stringObjExt(bytes.ptr, bytes.len);
 }
 
+const MessageBuffer = liu.RingBuffer(Message, 8);
+
 const Message = struct {
     const Self = @This();
 
@@ -45,6 +47,8 @@ const Bus = struct {
     var message_block: [8]Message = undefined;
     var next_message: usize = 0;
     var last_message: usize = 0;
+
+    var messages: MessageBuffer = undefined;
 
     var alloc_block: [4][]u8 = [_][]u8{&.{}} ** 4;
     var next_alloc: liu.Mark = liu.Mark.ZERO;
@@ -80,6 +84,12 @@ const Bus = struct {
 };
 
 export fn sendData() void {
+    Bus.messages = MessageBuffer.init();
+    defer Bus.messages.deinit();
+
+    _ = Bus.messages.pushMany(&.{});
+    _ = Bus.messages.popMany(&.{});
+
     Bus.sendMessage();
 }
 

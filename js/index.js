@@ -1,13 +1,16 @@
 let instance = null;
+let exports = null;
 
-const sendString = () => {
-  const encoder = new TextEncoder();
+const encoder = new TextEncoder();
+const decoder = new TextDecoder();
+
+const sendString = (str) => {
   const encodedString = encoder.encode(str);
 
-  const i8 = new Uint8Array(exports.mem);
+  const u8 = new Uint8Array(exports.mem);
 
   // Copy the UTF-8 encoded string into the WASM memory.
-  i8.set(encodedString);
+  u8.set(encodedString);
 };
 
 const objectBuffer = [];
@@ -21,7 +24,6 @@ const imports = {
         size
       );
 
-      const decoder = new TextDecoder();
       const string = decoder.decode(buffer);
 
       const length = objectBuffer.length;
@@ -29,9 +31,11 @@ const imports = {
 
       return length;
     },
+
     logObj: (value) => {
       console.log(objectBuffer[value]);
     },
+
     clearObjBuffer: () => {
       objectBuffer.length = 0;
     },
@@ -42,9 +46,10 @@ fetch("binary.wasm")
   .then((resp) => WebAssembly.instantiateStreaming(resp, imports))
   .then((result) => {
     instance = result.instance;
+    exports = instance.exports;
 
     // grab our exported function from wasm
-    const add = instance.exports.add;
+    const add = exports.add;
     console.log(add(3, 4));
   });
 
