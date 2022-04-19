@@ -72,6 +72,17 @@ pub fn RingBuffer(comptime T: type, comptime len_opt: ?usize) type {
                 }
             }
 
+            var begin_idx = self.next % self.data.len;
+            var end_idx = (self.next + push_len) % self.data.len;
+
+            if (begin_idx < end_idx) {
+                mem.copy(T, self.data[begin_idx..end_idx], data[0..push_len]);
+            } else {
+                const split_point = self.data.len - begin_idx;
+                mem.copy(T, self.data[begin_idx..self.data.len], data[0..split_point]);
+                mem.copy(T, self.data[0..end_idx], data[split_point..push_len]);
+            }
+
             self.next += push_len;
 
             return push_len;
@@ -80,7 +91,7 @@ pub fn RingBuffer(comptime T: type, comptime len_opt: ?usize) type {
         pub fn popMany(self: *Self, data: []T) []T {
             const len = self.next - self.last;
 
-            const pop_len = std.math.min(len, data.len);
+            const pop_len = std.math.min3(self.data.len, len, data.len);
 
             var begin_idx = self.last % self.data.len;
             var end_idx = (self.last + pop_len) % self.data.len;
