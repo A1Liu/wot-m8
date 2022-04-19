@@ -28,8 +28,8 @@ pub fn RingBuffer(comptime T: type, comptime len_opt: ?usize) type {
             const Buffer = []T;
             const Alloc = Allocator;
 
-            fn init(initial_size: usize, alloc: Allocator) !Self {
-                const data = try alloc.alloc(T, initial_size);
+            fn init(size: usize, alloc: Allocator) !Self {
+                const data = try alloc.alloc(T, size);
 
                 return Self{
                     .data = data,
@@ -55,7 +55,7 @@ pub fn RingBuffer(comptime T: type, comptime len_opt: ?usize) type {
         pub const init = Cond.init;
         pub const deinit = Cond.deinit;
 
-        pub fn pushMany(self: *Self, data: []T) usize {
+        pub fn pushMany(self: *Self, data: []const T) usize {
             const len = self.next - self.last;
 
             const push_len = std.math.min(self.data.len - len, data.len);
@@ -82,16 +82,15 @@ pub fn RingBuffer(comptime T: type, comptime len_opt: ?usize) type {
 
             const pop_len = std.math.min(len, data.len);
 
-            var i: usize = 0;
-            var idx = self.next % self.data.len;
+            var begin_idx = self.last % self.data.len;
+            var end_idx = (self.last + pop_len) % self.data.len;
 
-            while (i < pop_len) : (i += 1) {
-                data[i] = self.data[idx];
-
-                idx += 1;
-                if (idx == self.data.len) {
-                    idx = 0;
-                }
+            if (begin_idx < end_idx) {
+                mem.copy(T, data[0..pop_len], self.data[begin_idx..end_idx]);
+            } else {
+                const split_point = self.data.len - begin_idx;
+                mem.copy(T, data[0..split_point], self.data[begin_idx..self.data.len]);
+                mem.copy(T, data[split_point..pop_len], self.data[0..end_idx]);
             }
 
             self.last += pop_len;
