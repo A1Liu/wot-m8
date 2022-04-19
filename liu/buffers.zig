@@ -48,7 +48,7 @@ pub fn RingBuffer(comptime T: type, comptime len_opt: ?usize) type {
             }
 
             fn resizeAssumeEmpty(self: *Self, new_len: usize) !void {
-                assert(self.len() == 0);
+                assert(self.isEmpty());
 
                 self.next = 0;
                 self.last = 0;
@@ -73,13 +73,17 @@ pub fn RingBuffer(comptime T: type, comptime len_opt: ?usize) type {
         pub const resizeAssumeEmpty = Cond.resizeAssumeEmpty;
 
         pub fn resetCountersIfEmpty(self: *Self) bool {
-            if (self.len() == 0) {
+            if (self.isEmpty()) {
                 self.next = 0;
                 self.last = 0;
                 return true;
             }
 
             return false;
+        }
+
+        pub fn isEmpty(self: *const Self) bool {
+            return self.next == self.last;
         }
 
         pub fn len(self: *const Self) usize {
