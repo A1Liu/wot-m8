@@ -1,5 +1,6 @@
 const std = @import("std");
 const liu = @import("liu");
+const sources = @import("./types.zig");
 
 const builtin = std.builtin;
 const debug = std.log.debug;
@@ -71,41 +72,38 @@ pub fn panic(msg: []const u8, error_return_trace: ?*builtin.StackTrace) noreturn
     exit();
 }
 
-const Message = union(enum) {
+const CommandData = union(enum) {
     char_in: u8,
 };
 
-const MessageBuffer = liu.RingBuffer(Message, 16);
+const Command = struct {
+    alloc_size: usize = 0,
+    data: CommandData,
+};
 
-var messages: MessageBuffer = MessageBuffer.init();
+const CmdBuffer = liu.RingBuffer(Command, 16);
+const CmdAlloc = liu.RingBuffer(u8, null);
+
+var commands: CmdBuffer = CmdBuffer.init();
+var cmd_alloc: CmdAlloc = undefined;
+var next_cmd: Command = .{ .data = undefined };
 
 export fn charIn(code: u8) bool {
-    return messages.push(Message{ .char_in = code });
+    next_cmd.data.char_in = code;
+    const success = commands.push(next_cmd);
+    if (success) {
+        next_cmd.alloc_size = 0;
+    }
+
+    return success;
 }
 
-export fn run() void {
+export fn init() void {
+    cmd_alloc = CmdAlloc.init(4096, liu.Alloc) catch @panic("MsgAlloc failure");
+
     const text = "happy happy joy joy";
 
     debug("{s} b", .{text});
     info("a {s}", .{text});
     err("{s}c ", .{text});
-
-    var i: u32 = 0;
-    var cap: u32 = 0;
-    while (i < 32) : (i += 1) {
-        if (messages.push(Message{ .char_in = 1 })) {
-            cap += 1;
-        }
-    }
-
-    i = 0;
-    var popCap: u32 = 0;
-    while (i < 32) : (i += 1) {
-        if (messages.pop()) |c| {
-            _ = c;
-            popCap += 1;
-        }
-    }
-
-    info("{} {}", .{ cap, popCap });
 }

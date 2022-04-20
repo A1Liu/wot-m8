@@ -51,9 +51,9 @@ const imports = {
         postMessage(JSON.stringify(value) + "\n");
       }
     },
-    clearTerminal: () => {
-      // terminalText.innerText = "";
-    },
+    // clearTerminal: () => {
+    //   terminalText.innerText = "";
+    // },
 
     exit: () => {
       throw new Error("crashed");
@@ -67,5 +67,5 @@ fetch("/binary.wasm")
     wasmInstance = result.instance;
     wasmExports = wasmInstance.exports;
 
-    wasmExports.run();
+    wasmExports.init();
   });
