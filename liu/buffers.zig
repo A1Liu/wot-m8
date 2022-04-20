@@ -167,7 +167,7 @@ pub fn RingBuffer(comptime T: type, comptime len_opt: ?usize) type {
                 out.second = data[0..end_idx];
             }
 
-            assert(out.len == out.first.len + out.second.len);
+            assert(out.first.len + out.second.len == out.len);
 
             return out;
         }
