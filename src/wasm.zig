@@ -6,16 +6,19 @@ const debug = std.log.debug;
 const info = std.log.info;
 const err = std.log.err;
 
-pub const Obj = u32;
 const ArrayList = std.ArrayList;
 
-extern fn stringObjExt(message: [*]const u8, length: usize) Obj;
-extern fn exit() noreturn;
-extern fn clearObjBufferForObjAndAfter(objIndex: Obj) void;
-extern fn clearObjBuffer() void;
-extern fn logObj(id: Obj) void;
+pub const Obj = u32;
 
-fn stringObj(bytes: []const u8) Obj {
+extern fn stringObjExt(message: [*]const u8, length: usize) Obj;
+pub extern fn logObj(id: Obj) void;
+
+pub extern fn clearObjBufferForObjAndAfter(objIndex: Obj) void;
+pub extern fn clearObjBuffer() void;
+
+extern fn exit() noreturn;
+
+pub fn stringObj(bytes: []const u8) Obj {
     return stringObjExt(bytes.ptr, bytes.len);
 }
 
