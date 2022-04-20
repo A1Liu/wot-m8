@@ -6,15 +6,12 @@
   "author": "Albert Liu <albertymliu@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "build": "rimraf dist pkg && webpack",
+    "build": "rimraf dist pkg && zig build -Drelease-fast && webpack",
     "start": "rimraf dist pkg && webpack-dev-server --open -d --port 1234",
     "test": "cargo test && wasm-pack test --headless",
     "clean": "rimraf dist pkg",
     "deploy": "git push origin main:production"
   },
-  "browserslist": [
-    "since 2017-06"
-  ],
   "devDependencies": {
     "copy-webpack-plugin": "5.0.3",
     "rimraf": "3.0.0",
@@ -22,5 +19,10 @@
     "webpack-cli": "3.3.3",
     "webpack-dev-server": "3.7.1",
     "worker-loader": "3.0.8"
-  }
+  },
+  "browserslist": [
+    "last 5 chrome version",
+    "last 5 firefox version",
+    "last 5 safari version"
+  ]
 }

@@ -1,5 +1,5 @@
-let instance = null;
-let exports = null;
+let wasmInstance = null;
+let wasmExports = null;
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -22,7 +22,7 @@ const imports = {
   env: {
     stringObjExt: (location, size) => {
       const buffer = new Uint8Array(
-        instance.exports.memory.buffer,
+        wasmInstance.exports.memory.buffer,
         location,
         size
       );
@@ -64,8 +64,8 @@ const imports = {
 fetch("/binary.wasm")
   .then((resp) => WebAssembly.instantiateStreaming(resp, imports))
   .then((result) => {
-    instance = result.instance;
-    exports = instance.exports;
+    wasmInstance = result.instance;
+    wasmExports = wasmInstance.exports;
 
-    exports.run();
+    wasmExports.run();
   });
