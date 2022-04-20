@@ -6,7 +6,16 @@ const dist = path.resolve(__dirname, "dist");
 module.exports = {
   mode: "production",
   entry: {
-    index: "./js/index.js"
+    index: "./js/index.js",
+  },
+
+  module: {
+    rules: [
+      {
+        test: /\.worker\.js$/,
+        use: { loader: "worker-loader" },
+      },
+    ],
   },
 
   // Something here fixes some dumb caching bug. Fucking stupid-ass, I
@@ -27,7 +36,7 @@ module.exports = {
 
   output: {
     path: dist,
-    filename: "[name].js"
+    filename: "[name].js",
   },
   devServer: {
     contentBase: dist,
@@ -38,5 +47,5 @@ module.exports = {
       path.resolve(__dirname, "static"),
       path.resolve(__dirname, "zig-out/lib/binary.wasm"),
     ]),
-  ]
+  ],
 };

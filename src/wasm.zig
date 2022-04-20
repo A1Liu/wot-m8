@@ -149,37 +149,10 @@ export fn sendData() void {
     Bus.sendMessage();
 }
 
-export fn add(a: i32, b: i32) i32 {
+export fn run() void {
     const text = "happy happy joy joy";
-    // console_log_ex(log, log.len);
 
-    if (Bus.readMessage()) |message| {
-        defer message.deinit();
-
-        _ = message;
-    }
-
-    var _temp = liu.LoopAlloc.init(1024, liu.Alloc);
-    const temp = _temp.allocator();
-    while (true) {
-        defer _temp.loopCleanup();
-
-        debug("{s} b", .{text});
-        info("a {s}", .{text});
-        err("{s}c ", .{text});
-
-        var list = ArrayList(i32).init(temp);
-
-        list.ensureUnusedCapacity(2) catch @panic("bro");
-
-        list.append(a) catch @panic("welp");
-        list.append(b) catch @panic("oof");
-
-        var sum: i32 = 0;
-        for (list.items) |i| {
-            sum += i;
-        }
-
-        return sum;
-    }
+    debug("{s} b", .{text});
+    info("a {s}", .{text});
+    err("{s}c ", .{text});
 }
