@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#000000" />
   </head>
-  <body style="max-width: 100vw">
+  <body id="root">
     <div class="nameBox">
       <a class="name" href="/">TCI</a>
       <a class="name" href="https://github.com/A1Liu/tci">Check out TCI on Github!</a>
@@ -29,12 +29,16 @@
       <button id="navbarPlayButton" class="playButton" />
     </nav>
 
-    <div>
-      <div>
-
+    <div class="splitPane">
+      <div id="editorPane" class="leftPane">
       </div>
 
-      <div>
+      <span id="resizer" class="Resizer vertical" role="presentation"></span>
+
+      <div id="terminalPane" class="rightPane">
+        <div class="terminalTitleBar">Terminal</div>
+
+        <textarea id="terminalText" class="terminalText"></textarea>
 
       </div>
     </div>

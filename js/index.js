@@ -1,3 +1,5 @@
+const terminalText = document.getElementById("terminalText");
+
 let instance = null;
 let exports = null;
 
@@ -32,8 +34,13 @@ const imports = {
       return length;
     },
 
-    logObj: (value) => {
-      console.log(objectBuffer[value]);
+    logObj: (objIndex) => {
+      const value = objectBuffer[objIndex];
+      if (typeof value === "string") {
+        terminalText.innerText += value;
+      } else {
+        terminalText.innerText += JSON.stringify(value) + "\n";
+      }
     },
 
     clearObjBuffer: () => {
@@ -53,9 +60,6 @@ fetch("binary.wasm")
     console.log(add(3, 4));
   });
 
-const navbarInput = document.getElementById("navbarInput");
-const navbarUploadButton = document.getElementById("navbarUploadButton");
-
 const readFile = (file) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -64,6 +68,9 @@ const readFile = (file) =>
 
     reader.readAsText(file);
   });
+
+const navbarInput = document.getElementById("navbarInput");
+const navbarUploadButton = document.getElementById("navbarUploadButton");
 
 navbarUploadButton.addEventListener("click", (evt) => {
   evt.preventDefault();
@@ -81,3 +88,39 @@ navbarInput.addEventListener("change", (evt) => {
     console.log("changed", file);
   });
 });
+
+const editorPane = document.getElementById("editorPane");
+const terminalPane = document.getElementById("terminalPane");
+const resizer = document.getElementById("resizer");
+
+let leftWidth = editorPane.getBoundingClientRect().width;
+let resizing = false;
+let xPos = undefined;
+
+resizer.addEventListener("mousedown", (evt) => {
+  evt.preventDefault();
+
+  resizing = true;
+  xPos = evt.clientX;
+});
+
+window.addEventListener("mouseup", (evt) => {
+  if (resizing) {
+    evt.preventDefault();
+
+    resizing = false;
+  }
+});
+
+window.addEventListener("mousemove", (evt) => {
+  if (resizing) {
+    evt.preventDefault();
+
+    const newX = evt.clientX;
+    leftWidth += newX - xPos;
+    editorPane.style.width = `${leftWidth}px`;
+    xPos = newX;
+  }
+});
+
+editorPane.style.width = `${leftWidth}px`;

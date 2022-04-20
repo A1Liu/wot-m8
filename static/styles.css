@@ -1,3 +1,13 @@
+#root {
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+}
+
 .nameBox {
   display: flex;
   justify-content: space-between;
@@ -75,4 +85,54 @@
 
 .playButton:hover {
   border-color: transparent transparent transparent #808080;
+}
+
+.splitPane {
+  height: 100%;
+  outline: currentcolor none medium;
+  user-select: text;
+  width: 100%;
+
+  display: flex;
+  flex: 1 1 0%;
+  flex-direction: row;
+}
+
+.leftPane {
+  flex: 0 0 auto;
+  outline: currentcolor none medium;
+  width: 50%;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.rightPane {
+  flex: 1 1 0%;
+  outline: currentcolor none medium;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.terminalTitleBar {
+  height: 2.5rem;
+  --text-opacity: 1;
+  color: rgba(255, 255, 255, var(--text-opacity));
+  --bg-opacity: 1;
+  background-color: rgba(66, 66, 66, var(--bg-opacity));
+  padding: 0.25rem 1.5rem;
+  width: 100%;
+}
+
+.terminalText {
+  background-color: rgb(30, 30, 30);
+  color: rgb(0, 255, 0);
+  box-sizing: border-box;
+  font-family: "Dank Mono", "Fira Code", monospace;
+
+  height: 100%;
+  width: 100%;
+  padding: 0.5rem;
+  resize: none;
 }
