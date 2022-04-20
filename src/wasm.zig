@@ -1,17 +1,71 @@
 const std = @import("std");
 const liu = @import("liu");
 
+const builtin = std.builtin;
+const debug = std.log.debug;
+const info = std.log.info;
+const err = std.log.err;
+
 pub const Obj = u32;
 const ArrayList = std.ArrayList;
 
 extern fn stringObjExt(message: [*]const u8, length: usize) Obj;
+extern fn exit() noreturn;
+extern fn clearObjBufferForObjAndAfter(objIndex: Obj) void;
+extern fn clearObjBuffer() void;
+extern fn logObj(id: Obj) void;
 
-pub extern fn clearObjBuffer() void;
-
-pub extern fn logObj(id: Obj) void;
-
-pub fn stringObj(bytes: []const u8) Obj {
+fn stringObj(bytes: []const u8) Obj {
     return stringObjExt(bytes.ptr, bytes.len);
+}
+
+pub const strip_debug_info = true;
+pub const have_error_return_tracing = false;
+
+pub fn log(
+    comptime message_level: std.log.Level,
+    comptime scope: @Type(.EnumLiteral),
+    comptime input_format: []const u8,
+    args: anytype,
+) void {
+    if (@enumToInt(message_level) > @enumToInt(std.log.level)) {
+        return;
+    }
+
+    var _temp = liu.Temp.init();
+    const temp = _temp.allocator();
+    defer _temp.deinit();
+
+    const prefix = comptime prefix: {
+        const prefix = "[" ++ message_level.asText() ++ "]: ";
+
+        if (scope == .default) {
+            break :prefix prefix;
+        } else {
+            break :prefix @tagName(scope) ++ prefix;
+        }
+    };
+
+    const fmt = prefix ++ input_format ++ "\n";
+
+    const allocResult = std.fmt.allocPrint(temp, fmt, args);
+    const s = allocResult catch @panic("failed to print");
+
+    const obj = stringObjExt(s.ptr, s.len);
+    logObj(obj);
+
+    clearObjBufferForObjAndAfter(obj);
+}
+
+pub fn panic(msg: []const u8, error_return_trace: ?*builtin.StackTrace) noreturn {
+    @setCold(true);
+
+    _ = error_return_trace;
+
+    const obj = stringObj(msg);
+    logObj(obj);
+
+    exit();
 }
 
 const MessageBuffer = liu.RingBuffer(Message, 8);
@@ -96,10 +150,8 @@ export fn sendData() void {
 }
 
 export fn add(a: i32, b: i32) i32 {
-    const log = "happy happy joy joy";
+    const text = "happy happy joy joy";
     // console_log_ex(log, log.len);
-
-    const value = stringObj(log);
 
     if (Bus.readMessage()) |message| {
         defer message.deinit();
@@ -112,7 +164,9 @@ export fn add(a: i32, b: i32) i32 {
     while (true) {
         defer _temp.loopCleanup();
 
-        logObj(value);
+        debug("{s} b", .{text});
+        info("a {s}", .{text});
+        err("{s}c ", .{text});
 
         var list = ArrayList(i32).init(temp);
 

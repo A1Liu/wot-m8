@@ -34,17 +34,28 @@ const imports = {
       return length;
     },
 
-    logObj: (objIndex) => {
-      const value = objectBuffer[objIndex];
-      if (typeof value === "string") {
-        terminalText.innerText += value;
-      } else {
-        terminalText.innerText += JSON.stringify(value) + "\n";
-      }
+    clearObjBufferForObjAndAfter: (objIndex) => {
+      objectBuffer.length = objIndex;
     },
-
     clearObjBuffer: () => {
       objectBuffer.length = 0;
+    },
+
+    logObj: (objIndex) => {
+      const value = objectBuffer[objIndex];
+
+      if (typeof value === "string") {
+        terminalText.textContent += value;
+      } else {
+        terminalText.textContent += JSON.stringify(value) + "\n";
+      }
+    },
+    clearTerminal: () => {
+      terminalText.innerText = "";
+    },
+
+    exit: () => {
+      throw new Error("crashed");
     },
   },
 };
