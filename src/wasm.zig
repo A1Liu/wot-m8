@@ -71,85 +71,16 @@ pub fn panic(msg: []const u8, error_return_trace: ?*builtin.StackTrace) noreturn
     exit();
 }
 
-const MessageBuffer = liu.RingBuffer(Message, 8);
-
-const Message = struct {
-    const Self = @This();
-
-    final_mark: liu.Mark,
-
-    fn deinit(self: *const Self) void {
-        if (Bus.last_alloc.range + 1 < self.final_mark.range) {
-            var range = Bus.last_alloc.range;
-            const end = self.final_mark.range;
-
-            while (range < end) : (range += 1) {
-                const slot = range % Bus.alloc_block.len;
-                liu.Alloc.free(Bus.alloc_block[slot]);
-                Bus.alloc_block[slot] = &.{};
-            }
-        }
-
-        Bus.last_alloc = self.final_mark;
-
-        // pseudo-reset the range id's if possible
-        if (Bus.last_alloc.range == Bus.next_alloc.range) {
-            Bus.last_alloc.range = Bus.last_alloc.range % Bus.alloc_block.len;
-            Bus.next_alloc.range = Bus.next_alloc.range % Bus.alloc_block.len;
-        }
-    }
+const Message = union(enum) {
+    char_in: u8,
 };
 
-const Bus = struct {
-    var message_block: [8]Message = undefined;
-    var next_message: usize = 0;
-    var last_message: usize = 0;
+const MessageBuffer = liu.RingBuffer(Message, 16);
 
-    var messages: MessageBuffer = undefined;
+var messages: MessageBuffer = MessageBuffer.init();
 
-    var alloc_block: [4][]u8 = [_][]u8{&.{}} ** 4;
-    var next_alloc: liu.Mark = liu.Mark.ZERO;
-    var last_alloc: liu.Mark = liu.Mark.ZERO;
-
-    fn sendMessage() callconv(.C) void {
-        if (next_message - last_message == message_block.len) {
-            // bus is full
-            return;
-        }
-
-        const message_slot = next_message % message_block.len;
-
-        message_block[message_slot] = Message{
-            .final_mark = Bus.next_alloc,
-        };
-
-        next_message += 1;
-    }
-
-    fn readMessage() ?Message {
-        if (last_message == next_message) {
-            next_message = 0;
-            last_message = 0;
-            return null;
-        }
-
-        const message = message_block[Bus.last_message];
-        last_message += 1;
-
-        return message;
-    }
-};
-
-export fn sendData() void {
-    Bus.messages = MessageBuffer.init();
-    defer Bus.messages.deinit();
-
-    _ = Bus.messages.pushMany(&.{});
-    _ = Bus.messages.popMany(&.{});
-    _ = Bus.messages.pop();
-    _ = Bus.messages.push(.{ .final_mark = liu.Mark.ZERO });
-
-    Bus.sendMessage();
+export fn charIn(code: u8) bool {
+    return messages.push(Message{ .char_in = code });
 }
 
 export fn run() void {
@@ -158,4 +89,23 @@ export fn run() void {
     debug("{s} b", .{text});
     info("a {s}", .{text});
     err("{s}c ", .{text});
+
+    var i: u32 = 0;
+    var cap: u32 = 0;
+    while (i < 32) : (i += 1) {
+        if (messages.push(Message{ .char_in = 1 })) {
+            cap += 1;
+        }
+    }
+
+    i = 0;
+    var popCap: u32 = 0;
+    while (i < 32) : (i += 1) {
+        if (messages.pop()) |c| {
+            _ = c;
+            popCap += 1;
+        }
+    }
+
+    info("{} {}", .{ cap, popCap });
 }
