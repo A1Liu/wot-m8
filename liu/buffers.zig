@@ -76,6 +76,7 @@ pub fn RingBuffer(comptime T: type, comptime len_opt: ?usize) type {
             if (self.isEmpty()) {
                 self.next = 0;
                 self.last = 0;
+
                 return true;
             }
 
@@ -104,85 +105,6 @@ pub fn RingBuffer(comptime T: type, comptime len_opt: ?usize) type {
             return null;
         }
 
-        pub const SplitBuffer = struct {
-            first: []T = &.{},
-            second: []T = &.{},
-            len: usize = 0,
-        };
-
-        pub fn circularIndex(begin: usize, end: usize, data: []T) SplitBuffer {
-            assert(begin < end);
-
-            var out = SplitBuffer{ .len = end - begin };
-            assert(out.len <= data.len);
-
-            if (begin == end) {
-                return out;
-            }
-
-            var begin_idx = begin % data.len;
-            var end_idx = end % data.len;
-
-            if (begin_idx < end_idx) {
-                out.first = data[begin_idx..end_idx];
-            } else {
-                out.first = data[begin_idx..data.len];
-                out.second = data[0..end_idx];
-            }
-
-            return out;
-        }
-
-        pub fn allocPush(self: *Self, count: usize) SplitBuffer {
-            const items_len = self.len();
-            var out = SplitBuffer{};
-
-            if (items_len == 0) {
-                return out;
-            }
-
-            out.len = std.math.min(self.data.len -| items_len, count);
-
-            var begin_idx = self.next % self.data.len;
-            var end_idx = (self.next + out.len) % self.data.len;
-
-            if (begin_idx < end_idx) {
-                out.first = self.data[begin_idx..end_idx];
-            } else {
-                out.first = self.data[begin_idx..self.data.len];
-                out.second = self.data[0..end_idx];
-            }
-
-            self.next += out.len;
-
-            return out;
-        }
-
-        pub fn allocPop(self: *Self, count: usize) SplitBuffer {
-            const items_len = self.len();
-            var out = SplitBuffer{};
-
-            if (items_len == 0) {
-                return out;
-            }
-
-            out.len = std.math.min(items_len, count);
-
-            var begin_idx = self.last % self.data.len;
-            var end_idx = (self.last + out.len) % self.data.len;
-
-            if (begin_idx < end_idx) {
-                out.first = self.data[begin_idx..end_idx];
-            } else {
-                out.first = self.data[begin_idx..self.data.len];
-                out.second = self.data[0..end_idx];
-            }
-
-            self.last += out.len;
-
-            return out;
-        }
-
         pub fn pushMany(self: *Self, data: []const T) usize {
             const allocs = self.allocPush(data.len);
 
@@ -202,30 +124,109 @@ pub fn RingBuffer(comptime T: type, comptime len_opt: ?usize) type {
 
             return data[0..allocs.len];
         }
+
+        pub const SplitBuffer = struct {
+            first: []T = &.{},
+            second: []T = &.{},
+            len: usize = 0,
+        };
+
+        pub fn allocPush(self: *Self, count: usize) SplitBuffer {
+            const end = std.math.min(self.last + self.data.len, self.next + count);
+            const out = circularIndex(self.next, end, &self.data);
+            self.next += out.len;
+
+            return out;
+        }
+
+        pub fn allocPop(self: *Self, count: usize) SplitBuffer {
+            const end = std.math.min(self.next, self.last + count);
+            const out = circularIndex(self.last, end, &self.data);
+            self.last += out.len;
+
+            return out;
+        }
+
+        fn circularIndex(begin: usize, end: usize, data: []T) SplitBuffer {
+            assert(begin <= end);
+
+            var out = SplitBuffer{ .len = end - begin };
+            assert(out.len <= data.len);
+
+            if (begin == end) {
+                return out;
+            }
+
+            const begin_idx = begin % data.len;
+            const end_idx = end % data.len;
+
+            if (begin_idx < end_idx) {
+                out.first = data[begin_idx..end_idx];
+            } else {
+                out.first = data[begin_idx..data.len];
+                out.second = data[0..end_idx];
+            }
+
+            return out;
+        }
     };
 }
 
-test {
+test "RingBuffer: capacity safety" {
     const TBuffer = RingBuffer(u8, 16);
     var messages: TBuffer = TBuffer.init();
 
-    var i: u32 = 0;
+    var i: u8 = undefined;
+
     var cap: u32 = 0;
+    i = 0;
     while (i < 32) : (i += 1) {
-        std.debug.print("hey {}\n", .{i});
-        if (messages.push(12)) {
+        if (messages.push(i)) {
             cap += 1;
         }
     }
 
-    i = 0;
     var popCap: u32 = 0;
+    i = 0;
     while (i < 32) : (i += 1) {
         if (messages.pop()) |c| {
-            _ = c;
+            try std.testing.expect(c == i);
             popCap += 1;
         }
     }
 
     try std.testing.expect(popCap == cap);
+}
+
+test "RingBuffer: data integrity" {
+    const TBuffer = RingBuffer(u8, 16);
+    var messages: TBuffer = TBuffer.init();
+
+    var i: u8 = undefined;
+
+    i = 0;
+    while (i < 16) : (i += 1) {
+        const success = messages.push(i);
+        assert(success);
+    }
+
+    i = 0;
+    while (i < 8) : (i += 1) {
+        if (messages.pop()) |c| {
+            try std.testing.expect(c == i);
+        }
+    }
+
+    i = 0;
+    while (i < 8) : (i += 1) {
+        const success = messages.push(i + 16);
+        assert(success);
+    }
+
+    i = 0;
+    while (i < 16) : (i += 1) {
+        if (messages.pop()) |c| {
+            try std.testing.expect(c == i + 8);
+        }
+    }
 }
