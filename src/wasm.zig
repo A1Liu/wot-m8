@@ -1,6 +1,6 @@
 const std = @import("std");
 const liu = @import("liu");
-const sources = @import("./types.zig");
+const types = @import("./types.zig");
 
 const builtin = std.builtin;
 const debug = std.log.debug;
@@ -88,6 +88,8 @@ var commands: CmdBuffer = CmdBuffer.init();
 var cmd_alloc: CmdAlloc = undefined;
 var next_cmd: Command = .{ .data = undefined };
 
+var files: types.FileDb = undefined;
+
 export fn charIn(code: u8) bool {
     next_cmd.data.char_in = code;
     const success = commands.push(next_cmd);
@@ -100,6 +102,7 @@ export fn charIn(code: u8) bool {
 
 export fn init() void {
     cmd_alloc = CmdAlloc.init(4096, liu.Pages) catch @panic("MsgAlloc failure");
+    files = types.FileDb.init(1024);
 
     const text = "happy happy joy joy";
 
