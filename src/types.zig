@@ -14,6 +14,7 @@ const File = struct {
 };
 
 pub const FileDb = struct {
+    file_arenas: ArrayList([]u8),
     files: ArrayList(File),
     by_name: HashMap([]const u8, usize),
 };

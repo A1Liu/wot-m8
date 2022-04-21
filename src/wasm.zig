@@ -99,7 +99,7 @@ export fn charIn(code: u8) bool {
 }
 
 export fn init() void {
-    cmd_alloc = CmdAlloc.init(4096, liu.Alloc) catch @panic("MsgAlloc failure");
+    cmd_alloc = CmdAlloc.init(4096, liu.Pages) catch @panic("MsgAlloc failure");
 
     const text = "happy happy joy joy";
 

@@ -8,6 +8,7 @@ const Allocator = mem.Allocator;
 const ByteList = std.ArrayListAlignedUnmanaged([]u8, null);
 const GlobalAlloc = std.heap.GeneralPurposeAllocator(.{});
 
+// general purpose global allocator for small allocations
 var GlobalAllocator: GlobalAlloc = .{};
 pub const Alloc = GlobalAllocator.allocator();
 pub const Pages = std.heap.page_allocator;
@@ -159,7 +160,7 @@ pub const Temp = struct {
     }
 
     fn allocate(self: *Self, len: usize, ptr_align: u29, len_align: u29, ret_addr: usize) Allocator.Error![]u8 {
-        return bump.allocate(&self.mark, Alloc, len, ptr_align, len_align, ret_addr);
+        return bump.allocate(&self.mark, Pages, len, ptr_align, len_align, ret_addr);
     }
 };
 
@@ -170,17 +171,17 @@ pub fn clearFrameAllocator() void {
 }
 
 const FrameAlloc = struct {
-    const InitialSize = 4 * 1024 * 1024;
+    const InitialSize = 2 * 1024 * 1024;
     threadlocal var bump = BumpState.init(InitialSize);
     threadlocal var mark = Mark.ZERO;
 
-    const allocator = Allocator.init(&GlobalAllocator, alloc, resize, free);
+    const allocator = Allocator.init(undefined, alloc, resize, free);
 
-    const resize = Allocator.NoResize(GlobalAlloc).noResize;
-    const free = Allocator.NoOpFree(GlobalAlloc).noOpFree;
+    const resize = Allocator.NoResize(anyopaque).noResize;
+    const free = Allocator.NoOpFree(anyopaque).noOpFree;
 
-    fn alloc(_: *GlobalAlloc, len: usize, ptr_align: u29, len_align: u29, ret_addr: usize) Allocator.Error![]u8 {
-        return bump.allocate(&mark, Alloc, len, ptr_align, len_align, ret_addr);
+    fn alloc(_: *anyopaque, len: usize, ptr_align: u29, len_align: u29, ret_addr: usize) Allocator.Error![]u8 {
+        return bump.allocate(&mark, Pages, len, ptr_align, len_align, ret_addr);
     }
 };
 
