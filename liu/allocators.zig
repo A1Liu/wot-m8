@@ -26,14 +26,6 @@ const BumpState = struct {
         };
     }
 
-    pub fn deinit(self: *Self, alloc: Allocator) void {
-        for (self.ranges.items) |range| {
-            alloc.free(range);
-        }
-
-        self.ranges.deinit(alloc);
-    }
-
     fn allocate(bump: *Self, mark: *Mark, alloc: Allocator, len: usize, ptr_align: u29, len_align: u29, ret_addr: usize) Allocator.Error![]u8 {
         if (mark.range < bump.ranges.items.len) {
             const range = bump.ranges.items[mark.range];
@@ -92,7 +84,61 @@ pub const Bump = struct {
     }
 
     pub fn deinit(self: *Self) void {
-        self.bump.deinit(self.alloc);
+        for (self.ranges.items) |range| {
+            self.alloc.free(range);
+        }
+
+        self.ranges.deinit(self.alloc);
+    }
+
+    pub fn freeAndGetSize(self: *Self) usize {
+        var allocated: usize = 0;
+
+        for (self.bump.ranges.items) |range, idx| {
+            self.alloc.free(range);
+
+            if (idx < self.mark.range) {
+                allocated += range.len;
+            }
+        }
+
+        allocated += self.mark.index_in_range;
+
+        self.bump.ranges.items.len = 0;
+        self.mark = Mark.ZERO;
+
+        return allocated;
+    }
+
+    pub fn resetAndCoallesce(self: *Self) !void {
+        if (self.bump.ranges.items.len <= 1) {
+            // already coallesced
+
+            self.mark = Mark.ZERO;
+            return;
+        }
+
+        const size = self.freeAndGetSize();
+
+        _ = try self.allocator().alloc(u8, size);
+        self.mark = Mark.ZERO;
+    }
+
+    fn compareLessThan(context: void, left: []u8, right: []u8) bool {
+        _ = context;
+
+        return left.len > right.len;
+    }
+
+    pub fn loopCleanup(self: *Self) void {
+        const items = self.bump.ranges.items;
+        std.sort.insertionSort([]u8, items, {}, compareLessThan);
+
+        for (items[1..]) |*range| {
+            self.alloc.free(range.*);
+
+            range.* = &.{};
+        }
     }
 
     pub fn allocator(self: *Self) Allocator {
@@ -182,53 +228,5 @@ const FrameAlloc = struct {
 
     fn alloc(_: *anyopaque, len: usize, ptr_align: u29, len_align: u29, ret_addr: usize) Allocator.Error![]u8 {
         return bump.allocate(&mark, Pages, len, ptr_align, len_align, ret_addr);
-    }
-};
-
-pub const LoopAlloc = struct {
-    const Self = @This();
-
-    bump: BumpState,
-    mark: Mark,
-    alloc: Allocator,
-
-    pub fn init(initial_size: usize, alloc: Allocator) Self {
-        return .{
-            .bump = BumpState.init(initial_size),
-            .mark = Mark.ZERO,
-            .alloc = alloc,
-        };
-    }
-
-    pub fn deinit(self: *Self) void {
-        self.bump.deinit(self.alloc);
-    }
-
-    fn compareLessThan(context: void, left: []u8, right: []u8) bool {
-        _ = context;
-
-        return left.len > right.len;
-    }
-
-    pub fn loopCleanup(self: *Self) void {
-        const items = self.bump.ranges.items;
-        std.sort.insertionSort([]u8, items, {}, compareLessThan);
-
-        for (items[1..]) |*range| {
-            self.alloc.free(range.*);
-
-            range.* = &.{};
-        }
-    }
-
-    pub fn allocator(self: *Self) Allocator {
-        const resize = Allocator.NoResize(Self).noResize;
-        const free = Allocator.NoOpFree(Self).noOpFree;
-
-        return Allocator.init(self, Self.allocate, resize, free);
-    }
-
-    fn allocate(self: *Self, len: usize, ptr_align: u29, len_align: u29, ret_addr: usize) Allocator.Error![]u8 {
-        return self.bump.allocate(&self.mark, self.alloc, len, ptr_align, len_align, ret_addr);
     }
 };

@@ -101,8 +101,9 @@ export fn charIn(code: u8) bool {
 }
 
 export fn init() void {
-    cmd_alloc = CmdAlloc.init(4096, liu.Pages) catch @panic("MsgAlloc failure");
+    cmd_alloc = CmdAlloc.init(4096, liu.Pages) catch @panic("CmdAlloc failure");
     files = types.FileDb.init(1024);
+    files.arena.resetAndCoallesce() catch @panic("oof");
 
     const text = "happy happy joy joy";
 
