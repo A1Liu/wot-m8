@@ -1,6 +1,4 @@
-import Worker from "./compiler.worker.js";
-
-const worker = new Worker();
+const worker = new Worker('/worker.js');
 const terminalText = document.getElementById("terminalText");
 
 worker.onmessage = (evt) => {

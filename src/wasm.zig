@@ -134,5 +134,9 @@ export fn init() void {
     info("{s}", .{text});
     err("{s}", .{text});
 
+    inner();
+}
+
+fn inner() void {
     exitFmt("bb", .{});
 }
