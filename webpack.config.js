@@ -45,7 +45,7 @@ module.exports = {
   plugins: [
     new CopyPlugin([
       path.resolve(__dirname, "static"),
-      path.resolve(__dirname, "zig-out/lib/binary.wasm"),
+      path.resolve(__dirname, "zig-out/lib/web.wasm"),
     ]),
   ],
 };

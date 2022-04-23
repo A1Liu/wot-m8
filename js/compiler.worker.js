@@ -63,7 +63,7 @@ const imports = {
   },
 };
 
-fetch("/binary.wasm")
+fetch("/web.wasm")
   .then((resp) => WebAssembly.instantiateStreaming(resp, imports))
   .then((result) => {
     wasmInstance = result.instance;
