@@ -1,9 +1,8 @@
 const std = @import("std");
 const liu = @import("liu");
+const types = @import("./types.zig");
 
-// export stuff from wasm
-const wasm = @import("wasm.zig");
-pub usingnamespace wasm;
-
-const assert = std.debug.assert;
-const cast = std.math.cast;
+pub fn main() void {
+    var files: types.FileDb = undefined;
+    _ = files;
+}

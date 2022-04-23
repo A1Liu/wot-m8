@@ -2,12 +2,14 @@ const std = @import("std");
 const liu = @import("liu");
 const types = @import("./types.zig");
 
+const ArrayList = std.ArrayList;
 const builtin = std.builtin;
+
+const assert = std.debug.assert;
+const cast = std.math.cast;
 const debug = std.log.debug;
 const info = std.log.info;
 const err = std.log.err;
-
-const ArrayList = std.ArrayList;
 
 pub const Obj = u32;
 
@@ -133,10 +135,4 @@ export fn init() void {
     debug("{s}", .{text});
     info("{s}", .{text});
     err("{s}", .{text});
-
-    inner();
-}
-
-fn inner() void {
-    exitFmt("bb", .{});
 }
