@@ -105,7 +105,7 @@ export fn init() void {
     files = types.FileDb.init(1024);
     files.arena.resetAndKeepLargestArena();
 
-    const text = "happy happy joy joy";
+    const text = "dingo ate my baby";
 
     debug("{s} b", .{text});
     info("a {s}", .{text});
