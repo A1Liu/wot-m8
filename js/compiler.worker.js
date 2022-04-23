@@ -55,8 +55,10 @@ const imports = {
     //   terminalText.innerText = "";
     // },
 
-    exit: () => {
-      throw new Error("crashed");
+    exitExt: (objIndex) => {
+      const value = objectBuffer[objIndex];
+
+      throw new Error(`Crashed: ${value}`);
     },
   },
 };

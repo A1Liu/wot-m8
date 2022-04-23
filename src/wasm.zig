@@ -17,9 +17,35 @@ pub extern fn logObj(id: Obj) void;
 pub extern fn clearObjBufferForObjAndAfter(objIndex: Obj) void;
 pub extern fn clearObjBuffer() void;
 
-extern fn exit() noreturn;
+extern fn exitExt(objIndex: Obj) noreturn;
+
+pub fn exitFmt(comptime fmt: []const u8, args: anytype) noreturn {
+    var _temp = liu.Temp.init();
+    const temp = _temp.allocator();
+
+    const allocResult = std.fmt.allocPrint(temp, fmt, args);
+    const s = allocResult catch @panic("failed to print");
+
+    exit(s);
+}
+
+pub fn exit(bytes: []const u8) noreturn {
+    const obj = stringObjExt(bytes.ptr, bytes.len);
+    return exitExt(obj);
+}
 
 pub fn stringObj(bytes: []const u8) Obj {
+    return stringObjExt(bytes.ptr, bytes.len);
+}
+
+pub fn stringFmtObj(comptime fmt: []const u8, args: anytype) Obj {
+    var _temp = liu.Temp.init();
+    const temp = _temp.allocator();
+    defer _temp.deinit();
+
+    const allocResult = std.fmt.allocPrint(temp, fmt, args);
+    const bytes = allocResult catch @panic("failed to print");
+
     return stringObjExt(bytes.ptr, bytes.len);
 }
 
@@ -66,10 +92,7 @@ pub fn panic(msg: []const u8, error_return_trace: ?*builtin.StackTrace) noreturn
 
     _ = error_return_trace;
 
-    const obj = stringObj(msg);
-    logObj(obj);
-
-    exit();
+    exit(msg);
 }
 
 const CommandData = union(enum) {
@@ -105,9 +128,11 @@ export fn init() void {
     files = types.FileDb.init(1024);
     files.arena.resetAndKeepLargestArena();
 
-    const text = "dingo ate my baby";
+    const text = "Shamalamalan";
 
-    debug("{s} b", .{text});
-    info("a {s}", .{text});
-    err("{s}c ", .{text});
+    debug("{s}", .{text});
+    info("{s}", .{text});
+    err("{s}", .{text});
+
+    exitFmt("bb", .{});
 }
