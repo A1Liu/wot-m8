@@ -86,44 +86,22 @@ export const appendChild = (parent, child) => {
     evt.preventDefault();
     evt.stopPropagation();
 
-    resizing = true;
-    pos = isVert ? evt.clientY : evt.clientX;
-  });
-
-  window.addEventListener("mouseup", (evt) => {
-    if (resizing) {
-      evt.preventDefault();
-
-      resizing = false;
-    }
-  });
-
-  window.addEventListener("mousemove", (evt) => {
-    if (resizing) {
-      evt.preventDefault();
-
-      if (isVert) {
-        const newY = evt.clientY;
-        beforeSize += newY - pos;
-        resizerBefore.style.height = `${beforeSize}px`;
-        child.style.height = `${parentSize - beforeSize}px`;
-        pos = newY;
-      } else {
-        const newX = evt.clientX;
-        beforeSize += newX - pos;
-        resizerBefore.style.width = `${beforeSize}px`;
-        child.style.width = `${parentSize - beforeSize}px`;
-        pos = newX;
-      }
-    }
+    resizeState = {
+      isVert,
+      resizerBefore,
+      child,
+      beforeSize,
+      parentSize,
+      pos: isVert ? evt.clientY : evt.clientX,
+    };
   });
 
   if (isVert) {
     resizerBefore.style.height = `${beforeSize}px`;
-    child.style.height = `${beforeSize}px`;
+    child.style.height = `${beforeSize - 1}px`;
   } else {
     resizerBefore.style.width = `${beforeSize}px`;
-    child.style.width = `${beforeSize}px`;
+    child.style.width = `${beforeSize - 1}px`;
   }
 
   parent.appendChild(resizer);
@@ -131,3 +109,32 @@ export const appendChild = (parent, child) => {
 
   return;
 };
+
+window.addEventListener("mouseup", (evt) => {
+  if (resizeState) {
+    evt.preventDefault();
+
+    resizeState = null;
+  }
+});
+
+window.addEventListener("mousemove", (evt) => {
+  if (resizeState) {
+    console.log(resizeState);
+    evt.preventDefault();
+    const newPos = resizeState.isVert ? evt.clientY : evt.clientX;
+    resizeState.beforeSize += newPos - resizeState.pos;
+    resizeState.pos = newPos;
+
+    const beforeSize = resizeState.beforeSize;
+    const childSize = resizeState.parentSize - resizeState.beforeSize;
+
+    if (resizeState.isVert) {
+      resizeState.resizerBefore.style.height = `${beforeSize}px`;
+      resizeState.child.style.height = `${childSize - 1}px`;
+    } else {
+      resizeState.resizerBefore.style.width = `${beforeSize}px`;
+      resizeState.child.style.width = `${childSize - 1}px`;
+    }
+  }
+});
