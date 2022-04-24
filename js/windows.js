@@ -1,17 +1,14 @@
-const ROOT = "windows-root";
-
+const PANEL = "windows-panel";
 const RESIZER = "windows-resizer";
 const TABBED = "windows-tabbed";
 const TAB_BAR = "windows-tabbar";
 const TAB = "windows-tab";
 
-const HORIZONTAL = "windows-horizontal"; // left-to-right
-const VERTICAL = "windows-vertical"; // top-to-bottom
+const VERTICAL = "vertical"; // top-to-bottom
+const HORIZONTAL = "horizontal"; // left-to-right
 
 export const AFTER = "windows-AFTER";
 export const BEFORE = "windows-BEFORE";
-
-export const root = document.getElementById(ROOT);
 
 export const TabbedWindow = (title, content) => {
   const tabbedWindow = document.createElement("div");
@@ -33,7 +30,7 @@ export const TabbedWindow = (title, content) => {
 
 export const addHorizontalSibling = (domNode, child, position = AFTER) => {
   const parent = domNode.parent;
-  if (parent.classList.contains(HORIZONTAL) || parent.id === ROOT) {
+  if (parent.classList.contains(HORIZONTAL)) {
     domNode.insertAdjacentElement("beforebegin", child);
 
     return;
@@ -55,30 +52,34 @@ let resizeState = null;
 
 export const appendChild = (parent, child) => {
   const classList = parent.classList;
-  const isVertical = classList.contains(VERTICAL);
-  const isHorizontal = classList.contains(HORIZONTAL) || parent.id === ROOT;
+  const isVert = classList.contains(VERTICAL);
+  const isHorizontal = classList.contains(HORIZONTAL);
 
-  if (!isVertical && !isHorizontal) {
+  const isValid = classList.contains(PANEL) && (isVert || isHorizontal);
+  if (!isValid) {
     console.warn("tried to append to invalid value");
     return;
   }
+
+  const parentBox = parent.getBoundingClientRect();
+  child.style.width = `100%`;
+  child.style.height = `100%`;
 
   if (parent.children.length <= 0) {
     parent.appendChild(child);
     return;
   }
 
-  const resizerLeft = parent.lastChild;
+  const parentSize = isVert ? parentBox.height : parentBox.width;
+  const resizerBefore = parent.lastChild;
 
   const resizer = document.createElement("span");
   resizer.classList.add(RESIZER);
-  resizer.classList.add(isVertical ? "vertical" : "horizontal");
   resizer.role = "presentation";
 
-  const parentWidth = parent.getBoundingClientRect().width;
-  let leftWidth = parentWidth / 2;
+  let beforeSize = parentSize / 2;
   let resizing = false;
-  let xPos = null;
+  let pos = null;
 
   // TODO cleanup event listeners added to window
   resizer.addEventListener("mousedown", (evt) => {
@@ -86,7 +87,7 @@ export const appendChild = (parent, child) => {
     evt.stopPropagation();
 
     resizing = true;
-    xPos = evt.clientX;
+    pos = isVert ? evt.clientY : evt.clientX;
   });
 
   window.addEventListener("mouseup", (evt) => {
@@ -101,16 +102,29 @@ export const appendChild = (parent, child) => {
     if (resizing) {
       evt.preventDefault();
 
-      const newX = evt.clientX;
-      leftWidth += newX - xPos;
-      resizerLeft.style.width = `${leftWidth}px`;
-      child.style.width = `${parentWidth - leftWidth}px`;
-      xPos = newX;
+      if (isVert) {
+        const newY = evt.clientY;
+        beforeSize += newY - pos;
+        resizerBefore.style.height = `${beforeSize}px`;
+        child.style.height = `${parentSize - beforeSize}px`;
+        pos = newY;
+      } else {
+        const newX = evt.clientX;
+        beforeSize += newX - pos;
+        resizerBefore.style.width = `${beforeSize}px`;
+        child.style.width = `${parentSize - beforeSize}px`;
+        pos = newX;
+      }
     }
   });
 
-  resizerLeft.style.width = `${leftWidth}px`;
-  child.style.width = `${leftWidth}px`;
+  if (isVert) {
+    resizerBefore.style.height = `${beforeSize}px`;
+    child.style.height = `${beforeSize}px`;
+  } else {
+    resizerBefore.style.width = `${beforeSize}px`;
+    child.style.width = `${beforeSize}px`;
+  }
 
   parent.appendChild(resizer);
   parent.appendChild(child);

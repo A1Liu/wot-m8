@@ -1,5 +1,7 @@
 import * as windows from "./windows";
 
+export const ROOT = document.getElementById("windows-root");
+
 const worker = new Worker(new URL("./worker.js", import.meta.url));
 const terminalText = document.createElement("textarea");
 
@@ -38,9 +40,12 @@ navbarInput.addEventListener("change", (evt) => {
 
 const editorPane = document.createElement("div");
 
-editorPane.classList.add("leftPane");
+editorPane.classList.add("editorPane");
 terminalText.classList.add("rightPane");
 terminalText.classList.add("terminalText");
 
-windows.appendChild(windows.root, editorPane);
-windows.appendChild(windows.root, windows.TabbedWindow("Terminal", terminalText));
+windows.appendChild(ROOT, editorPane);
+
+setTimeout(() => {
+  windows.appendChild(ROOT, windows.TabbedWindow("Terminal", terminalText));
+}, 500);
