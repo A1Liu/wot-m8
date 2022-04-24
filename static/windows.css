@@ -1,0 +1,92 @@
+#windows-root, .windows-panel {
+  height: 100%;
+  outline: currentcolor none medium;
+  user-select: text;
+  width: 100%;
+
+  display: flex;
+  flex-direction: row;
+}
+
+.window-root.horizontal,.windows-panel.horizontal {
+  flex-direction: row;
+}
+
+.windows-tabbed {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+.windows-tab {
+  height: 100%;
+  background-color: rgba(80, 80, 80, var(--bg-opacity));
+  outline: currentcolor none medium;
+  padding: 0.25rem 1.5rem;
+
+  display: flex;
+  justify-content: center;
+  align-content: center;
+  flex-direction: column;
+}
+
+.windows-tabbar {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: hidden;
+
+  height: 2.5rem;
+  --text-opacity: 1;
+  color: rgba(255, 255, 255, var(--text-opacity));
+  --bg-opacity: 1;
+  background-color: rgba(66, 66, 66, var(--bg-opacity));
+}
+
+.windows-resizer {
+  background: #000;
+  opacity: 0.2;
+  z-index: 1;
+  box-sizing: border-box;
+  background-clip: padding-box;
+}
+
+.windows-resizer:hover {
+  transition: all 2s ease;
+}
+
+.windows-resizer.vertical {
+  height: 11px;
+  margin: -5px 0;
+  border-top: 5px solid hsla(0, 0%, 100%, 0);
+  border-bottom: 5px solid hsla(0, 0%, 100%, 0);
+  cursor: row-resize;
+  width: 100%;
+}
+
+.windows-resizer.vertical:hover {
+  border-top: 5px solid rgba(0, 0, 0, 0.5);
+  border-bottom: 5px solid rgba(0, 0, 0, 0.5);
+}
+
+.windows-resizer.horizontal {
+  width: 11px;
+  margin: 0 -5px;
+  border-left: 5px solid hsla(0, 0%, 100%, 0);
+  border-right: 5px solid hsla(0, 0%, 100%, 0);
+  cursor: col-resize;
+}
+
+.windows-resizer.horizontal:hover {
+  border-left: 5px solid rgba(0, 0, 0, 0.5);
+  border-right: 5px solid rgba(0, 0, 0, 0.5);
+}
+
+.windows-resizer.disabled {
+  cursor: not-allowed;
+}
+.windows-resizer.disabled:hover {
+  border-color: transparent;
+}
+

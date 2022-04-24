@@ -1,5 +1,7 @@
-const worker = new Worker(new URL('./worker.js', import.meta.url));
-const terminalText = document.getElementById("terminalText");
+import * as windows from "./windows";
+
+const worker = new Worker(new URL("./worker.js", import.meta.url));
+const terminalText = document.createElement("textarea");
 
 worker.onmessage = (evt) => {
   terminalText.textContent += evt.data;
@@ -34,38 +36,11 @@ navbarInput.addEventListener("change", (evt) => {
   });
 });
 
-const editorPane = document.getElementById("editorPane");
-const terminalPane = document.getElementById("terminalPane");
-const resizer = document.getElementById("resizer");
+const editorPane = document.createElement("div");
 
-let leftWidth = editorPane.getBoundingClientRect().width;
-let resizing = false;
-let xPos = undefined;
+editorPane.classList.add("leftPane");
+terminalText.classList.add("rightPane");
+terminalText.classList.add("terminalText");
 
-resizer.addEventListener("mousedown", (evt) => {
-  evt.preventDefault();
-
-  resizing = true;
-  xPos = evt.clientX;
-});
-
-window.addEventListener("mouseup", (evt) => {
-  if (resizing) {
-    evt.preventDefault();
-
-    resizing = false;
-  }
-});
-
-window.addEventListener("mousemove", (evt) => {
-  if (resizing) {
-    evt.preventDefault();
-
-    const newX = evt.clientX;
-    leftWidth += newX - xPos;
-    editorPane.style.width = `${leftWidth}px`;
-    xPos = newX;
-  }
-});
-
-editorPane.style.width = `${leftWidth}px`;
+windows.appendChild(windows.root, editorPane);
+windows.appendChild(windows.root, windows.TabbedWindow("Terminal", terminalText));
