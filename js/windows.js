@@ -41,11 +41,11 @@ let resizeState = null;
 
 /* {
   parent: DomNode,
+  isVert: boolean,
   nodeBeforeResize: DomNode,
   nodeAfterResize: DomNode,
   nodeBeingDragged: DomNode,
   mostRecentPos: number,
-  mostRecentLeftSize: number,
   mostRecentBeforeSize: number,
   initialTotalSize: number,
 }; */
