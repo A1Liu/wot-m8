@@ -39,16 +39,34 @@ export const addHorizontalSibling = (domNode, child, position = AFTER) => {
 
 let resizeState = null;
 
-/* {
-  parent: DomNode,
-  isVert: boolean,
-  nodeBeforeResize: DomNode,
-  nodeAfterResize: DomNode,
-  nodeBeingDragged: DomNode,
-  mostRecentPos: number,
-  mostRecentBeforeSize: number,
-  initialTotalSize: number,
-}; */
+window.addEventListener("mouseup", (evt) => {
+  if (resizeState) {
+    evt.preventDefault();
+
+    resizeState = null;
+  }
+});
+
+window.addEventListener("mousemove", (evt) => {
+  if (resizeState) {
+    evt.preventDefault();
+
+    const newPos = resizeState.isVert ? evt.clientY : evt.clientX;
+    resizeState.beforeSize += newPos - resizeState.pos;
+    resizeState.pos = newPos;
+
+    const beforeSize = resizeState.beforeSize;
+    const childSize = resizeState.parentSize - resizeState.beforeSize;
+
+    if (resizeState.isVert) {
+      resizeState.resizerBefore.style.height = `${beforeSize}px`;
+      resizeState.child.style.height = `${childSize - 1}px`;
+    } else {
+      resizeState.resizerBefore.style.width = `${beforeSize}px`;
+      resizeState.child.style.width = `${childSize - 1}px`;
+    }
+  }
+});
 
 export const appendChild = (parent, child) => {
   const classList = parent.classList;
@@ -109,32 +127,3 @@ export const appendChild = (parent, child) => {
 
   return;
 };
-
-window.addEventListener("mouseup", (evt) => {
-  if (resizeState) {
-    evt.preventDefault();
-
-    resizeState = null;
-  }
-});
-
-window.addEventListener("mousemove", (evt) => {
-  if (resizeState) {
-    console.log(resizeState);
-    evt.preventDefault();
-    const newPos = resizeState.isVert ? evt.clientY : evt.clientX;
-    resizeState.beforeSize += newPos - resizeState.pos;
-    resizeState.pos = newPos;
-
-    const beforeSize = resizeState.beforeSize;
-    const childSize = resizeState.parentSize - resizeState.beforeSize;
-
-    if (resizeState.isVert) {
-      resizeState.resizerBefore.style.height = `${beforeSize}px`;
-      resizeState.child.style.height = `${childSize - 1}px`;
-    } else {
-      resizeState.resizerBefore.style.width = `${beforeSize}px`;
-      resizeState.child.style.width = `${childSize - 1}px`;
-    }
-  }
-});
