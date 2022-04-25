@@ -1,7 +1,5 @@
 import * as windows from "./windows";
 
-export const ROOT = document.getElementById("windows-root");
-
 const worker = new Worker(new URL("./worker.js", import.meta.url));
 const terminalText = document.createElement("textarea");
 
@@ -18,13 +16,19 @@ const readFile = (file) =>
     reader.readAsText(file);
   });
 
+const ROOT = document.getElementById("windows-root");
 const navbarInput = document.getElementById("navbarInput");
 const navbarUploadButton = document.getElementById("navbarUploadButton");
 
 navbarUploadButton.addEventListener("click", (evt) => {
   evt.preventDefault();
 
-  navbarInput.click();
+  // navbarInput.click();
+  const second = document.createElement("textarea");
+  second.classList.add("rightPane");
+  second.classList.add("terminalText");
+
+  windows.appendChild(ROOT, windows.TabbedWindow("Terminal", second));
 });
 
 navbarInput.addEventListener("change", (evt) => {
@@ -39,13 +43,21 @@ navbarInput.addEventListener("change", (evt) => {
 });
 
 const editorPane = document.createElement("div");
-
 editorPane.classList.add("editorPane");
-terminalText.classList.add("rightPane");
-terminalText.classList.add("terminalText");
 
 windows.appendChild(ROOT, editorPane);
 
-setTimeout(() => {
-  windows.appendChild(ROOT, windows.TabbedWindow("Terminal", terminalText));
-}, 500);
+// terminalText.classList.add("rightPane");
+// terminalText.classList.add("terminalText");
+
+// setTimeout(() => {
+//   windows.appendChild(ROOT, windows.TabbedWindow("Terminal", terminalText));
+// }, 500);
+
+// setTimeout(() => {
+//   const second = document.createElement("textarea");
+//   second.classList.add("rightPane");
+//   second.classList.add("terminalText");
+//
+//   windows.appendChild(ROOT, windows.TabbedWindow("Twoie", second));
+// }, 1000);

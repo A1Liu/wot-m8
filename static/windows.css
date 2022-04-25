@@ -2,6 +2,15 @@
   outline: currentcolor none medium;
   user-select: text;
   display: flex;
+  flex-wrap: nowrap;
+
+  /* these may or may not move to windows-root; idk yet */
+  flex-grow: 1;
+  flex-basis: 0;
+  min-height: 0px;
+  min-width: 0px;
+  max-height: inherit;
+  max-width: inherit;
 }
 
 .windows-panel.horizontal {
@@ -47,6 +56,7 @@
 .windows-resizer {
   background: #000;
   opacity: 0.2;
+  flex-shrink: 0;
   z-index: 1;
   box-sizing: border-box;
   background-clip: padding-box;
