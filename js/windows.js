@@ -12,6 +12,7 @@ export const AFTER = "windows-AFTER";
 export const BEFORE = "windows-BEFORE";
 
 // TODO use percentages in the styles instead of other things
+// mouse resize requires more complicated computations
 
 // Mutable Globals
 let g_resizeState = null;
