@@ -157,6 +157,13 @@ export const appendChild = (parent, newChild) => {
     newChild.style.width = `${avgElementSize}px`;
   }
 
+  // const elementSize = 100 / elementCount;
+  // if (isVert) {
+  //   newChild.style.height = `${elementSize}%`;
+  // } else {
+  //   newChild.style.width = `${elementSize}%`;
+  // }
+
   parent.appendChild(resizer);
   parent.appendChild(newChild);
 
